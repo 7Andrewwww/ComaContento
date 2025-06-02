@@ -11,6 +11,27 @@
       background-color: #fffdf7;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
+    body {
+  background-image: url('imagenes/fondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco con transparencia */
+  z-index: -1;
+}
+    
     .navbar {
       background: linear-gradient(to right, #fcd116, #003893, #ce1126);
       border-bottom-left-radius: 1rem;
@@ -21,14 +42,13 @@
       font-weight: 600;
     }
     .hero {
-      background-image: url('imagenes/banner-colombia.jpg');
       background-size: cover;
       background-position: center;
-      color: white;
+      color: black;
       padding: 7rem 2rem;
       text-align: center;
       background-blend-mode: overlay;
-      background-color: rgba(0, 0, 0, 0.4);
+      background-color: rgba(0, 0, 0, 0);
       border-radius: 0 0 2rem 2rem;
     }
     .hero h1 {
@@ -119,7 +139,7 @@
           <div class="p-4">
             <h5>Consultar Ventas</h5>
             <p>Revisa las estadísticas de ventas mensuales y anuales por plato.</p>
-            <a href="ConsultarVentas.php" class="btn btn-warning">Ir al módulo</a>
+            <a href="presentacion/ConsultarVentas.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
@@ -129,8 +149,8 @@
           <img src="imagenes/regiones.jpg" alt="Regiones">
           <div class="p-4">
             <h5>Ventas por Región</h5>
-            <p>Consulta los platos más vendidos por región en distintos periodos.</p>
-            <a href="VentasPorRegion.php" class="btn btn-warning">Ir al módulo</a>
+            <p>Consulta los platos más vendidos por región.</p>
+            <a href="presentacion/VentasPorRegion.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
@@ -141,7 +161,7 @@
           <div class="p-4">
             <h5>Ventas por Momento</h5>
             <p>Revisa los platos más populares en desayuno, almuerzo y cena.</p>
-            <a href="VentasPorMomento.php" class="btn btn-warning">Ir al módulo</a>
+            <a href="presentacion/VentasPorMomento.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
@@ -152,7 +172,7 @@
           <div class="p-4">
             <h5>Crear Platos</h5>
             <p>Registra nuevos platos con sus ingredientes y preparación.</p>
-            <a href="CrearPlato.php" class="btn btn-primary">Ir al módulo</a>
+            <a href="presentacion/CrearPlato.php" class="btn btn-primary">Ir al módulo</a>
           </div>
         </div>
       </div>
@@ -163,7 +183,7 @@
           <div class="p-4">
             <h5>Crear Carta</h5>
             <p>Define una nueva carta, su vigencia y visualiza versiones anteriores.</p>
-            <a href="CrearCarta.php" class="btn btn-primary">Ir al módulo</a>
+            <a href="presentacion/CrearCarta.php" class="btn btn-primary">Ir al módulo</a>
           </div>
         </div>
       </div>
@@ -174,7 +194,7 @@
           <div class="p-4">
             <h5>Ver Fotografías</h5>
             <p>Disfruta de la galería de nuestros platos típicos colombianos.</p>
-            <a href="VerFotos.php" class="btn btn-danger">Ver fotos</a>
+            <a href="presentacion/VerFotos.php" class="btn btn-danger">Ver fotos</a>
           </div>
         </div>
       </div>
