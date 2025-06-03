@@ -89,4 +89,36 @@ class Venta {
         $conexion->cerrar();
         return $venta;
     }
+    
+    // En Venta.php
+    public static function consultarVentasPorPlatoRegion($mes = null, $año = null) {
+        $conexion = new Conexion();
+        $ventasDAO = new VentasDAO();
+        $conexion->abrir();
+        $conexion->ejecutar($ventasDAO->consultarVentasPorPlatoRegion($mes, $año));
+        
+        $ventasPorRegion = array();
+        while(($datos = $conexion->registro()) != null) {
+            $regionId = $datos[0];
+            $regionNombre = $datos[1];
+            $plato = new Plato($datos[2], $datos[3]);
+            
+            if (!isset($ventasPorRegion[$regionId])) {
+                $ventasPorRegion[$regionId] = array(
+                    'id_region' => $regionId,
+                    'nombre_region' => $regionNombre,
+                    'platos' => array()
+                );
+            }
+            
+            $ventasPorRegion[$regionId]['platos'][] = array(
+                'plato' => $plato,
+                'cantidad_vendida' => $datos[4],
+                'total_vendido' => $datos[5]
+            );
+        }
+        
+        $conexion->cerrar();
+        return $ventasPorRegion;
+    }
 }

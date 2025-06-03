@@ -74,4 +74,41 @@ class VentasDAO {
                 JOIN plato p ON dv.id_plato = p.id_plato
                 WHERE v.id_venta = " . $id_venta;
     }
+    
+   
+    public function consultarVentasPorPlatoRegion($mes = null, $año = null) {
+        $sentencia = "SELECT
+                    r.id_reg,
+                    r.nombre as nombre_region,
+                    p.id_plato,
+                    p.nombre as nombre_plato,
+                    SUM(dv.cantidad_platos) as cantidad_vendida,
+                    SUM(dv.subtotal) as total_vendido
+                  FROM detalle_venta dv
+                  JOIN plato p ON dv.id_plato = p.id_plato
+                  JOIN region r ON p.id_reg = r.id_reg
+                  JOIN venta v ON dv.id_venta = v.id_venta";
+        
+        $conditions = [];
+        
+        // Validar que mes sea un número válido
+        if (!is_null($mes) && is_numeric($mes) && $mes >= 1 && $mes <= 12) {
+            $conditions[] = "MONTH(v.fecha) = " . intval($mes);
+        }
+        
+        // Validar que año sea un número válido (y no "Todos")
+        if (!is_null($año) && is_numeric($año)) {
+            $conditions[] = "YEAR(v.fecha) = " . intval($año);
+        }
+        
+        if (!empty($conditions)) {
+            $sentencia .= " WHERE " . implode(" AND ", $conditions);
+        }
+        
+        $sentencia .= " GROUP BY r.id_reg, r.nombre, p.id_plato, p.nombre
+                    ORDER BY r.nombre, total_vendido DESC";
+        
+        return $sentencia;
+    }
+    
 }
