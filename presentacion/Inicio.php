@@ -13,7 +13,7 @@
     }
     
     body {
-  background-image: url('imagenes/fondo.jpg');
+  background-image: url('/ComaContento/imagenes/fondo.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -28,7 +28,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.7); /* Fondo blanco con transparencia */
+  background-color: rgba(255, 255, 255, 0.7); 
   z-index: -1;
 }
     
@@ -119,7 +119,7 @@ body::before {
     <h2 class="text-center section-title">Sobre Nosotros</h2>
     <div class="row align-items-center">
       <div class="col-md-6 mb-4 mb-md-0">
-        <img src="imagenes/restaurante.jpg" class="img-fluid rounded-4 shadow" alt="Restaurante">
+        <img src="/ComaContento/imagenes/restaurante.jpg" class="img-fluid rounded-4 shadow" alt="Restaurante">
       </div>
       <div class="col-md-6">
         <p>Bienvenido a “Colombiano, Coma Contento”, un rincón donde se vive, se siente y se saborea Colombia. Nuestro restaurante es más que un lugar para comer: es una experiencia que celebra la diversidad cultural y gastronómica de nuestra tierra. Cada plato que servimos es un homenaje a las tradiciones, ingredientes y saberes ancestrales que han pasado de generación en generación en las distintas regiones del país.</p>
@@ -135,66 +135,66 @@ body::before {
     <div class="row g-4">
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/ventas.jpg" alt="Ventas">
+          <img src="/ComaContento/imagenes/ventas.jpg" alt="Ventas">
           <div class="p-4">
             <h5>Consultar Ventas</h5>
             <p>Revisa las estadísticas de ventas mensuales y anuales por plato.</p>
-            <a href="presentacion/ConsultarVentas.php" class="btn btn-warning">Ir al módulo</a>
+            <a href="/ComaContento/presentacion/ConsultarVentas.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/regiones.jpg" alt="Regiones">
+          <img src="/ComaContento/imagenes/regiones.jpg" alt="Regiones">
           <div class="p-4">
             <h5>Ventas por Región</h5>
             <p>Consulta los platos más vendidos por región.</p>
-            <a href="presentacion/VentasPorRegion.php" class="btn btn-warning">Ir al módulo</a>
+            <a href="/ComaContento/presentacion/VentasPorRegion.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/VentasPorMomento.jpg" alt="Momentos">
+          <img src="/ComaContento/imagenes/VentasPorMomento.jpg" alt="Momentos">
           <div class="p-4">
             <h5>Ventas por Momento</h5>
             <p>Revisa los platos más populares en desayuno, almuerzo y cena.</p>
-            <a href="presentacion/VentasPorMomento.php" class="btn btn-warning">Ir al módulo</a>
+            <a href="/ComaContento/presentacion/VentasPorMomento.php" class="btn btn-warning">Ir al módulo</a>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/Plato.jpg" alt="Crear Plato">
+          <img src="/ComaContento/imagenes/Plato.jpg" alt="Crear Plato">
           <div class="p-4">
             <h5>Crear Platos</h5>
             <p>Registra nuevos platos con sus ingredientes y preparación.</p>
-            <a href="presentacion/CrearPlato.php" class="btn btn-primary">Ir al módulo</a>
+            <a href="/ComaContento/presentacion/CrearPlato.php" class="btn btn-primary">Ir al módulo</a>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/cartas.jpg" alt="Crear Carta">
+          <img src="/ComaContento/imagenes/cartas.jpg" alt="Crear Carta">
           <div class="p-4">
             <h5>Crear Carta</h5>
             <p>Define una nueva carta, su vigencia y visualiza versiones anteriores.</p>
-            <a href="presentacion/CrearCarta.php" class="btn btn-primary">Ir al módulo</a>
+            <a href="/ComaContento/presentacion/CrearCarta.php" class="btn btn-primary">Ir al módulo</a>
           </div>
         </div>
       </div>
 
       <div class="col-md-4">
         <div class="card text-center h-100">
-          <img src="imagenes/fotos.jpg" alt="Ver Fotografías">
+          <img src="/ComaContento/imagenes/fotos.jpg" alt="Ver Fotografías">
           <div class="p-4">
             <h5>Ver Fotografías</h5>
             <p>Disfruta de la galería de nuestros platos típicos colombianos.</p>
-            <a href="presentacion/VerFotos.php" class="btn btn-danger">Ver fotos</a>
+            <a href="/ComaContento/presentacion/VerFotos.php" class="btn btn-danger">Ver fotos</a>
           </div>
         </div>
       </div>
