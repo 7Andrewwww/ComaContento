@@ -78,15 +78,54 @@ class VentasDAO {
    
     public function consultarVentasPorPlatoRegion($mes = null, $año = null) {
         $sentencia = "SELECT
-                    r.id_reg,
-                    r.nombre as nombre_region,
+                r.id_reg,
+                r.nombre as nombre_region,
+                p.id_plato,
+                p.nombre as nombre_plato,
+                SUM(dv.cantidad_platos) as cantidad_vendida,
+                SUM(dv.subtotal) as total_vendido
+              FROM detalle_venta dv
+              JOIN plato p ON dv.id_plato = p.id_plato
+              JOIN region r ON p.id_reg = r.id_reg
+              JOIN venta v ON dv.id_venta = v.id_venta";
+        
+        $conditions = [];
+        
+        // Validar que mes sea un número válido
+        if (!is_null($mes) && is_numeric($mes) && $mes >= 1 && $mes <= 12) {
+            $conditions[] = "MONTH(v.fecha) = " . intval($mes);
+        }
+        
+        // Validar que año sea un número válido (entre 2000 y 2100 como ejemplo)
+        if (!is_null($año) && is_numeric($año)) {
+            $año = intval($año);
+            if ($año >= 2000 && $año <= 2100) {
+                $conditions[] = "YEAR(v.fecha) = " . $año;
+            }
+        }
+        
+        if (!empty($conditions)) {
+            $sentencia .= " WHERE " . implode(" AND ", $conditions);
+        }
+        
+        $sentencia .= " GROUP BY r.id_reg, r.nombre, p.id_plato, p.nombre
+                ORDER BY r.nombre, total_vendido DESC";
+        
+        return $sentencia;
+    }
+    
+    // Agregar este nuevo método a la clase VentasDAO
+    public function consultarVentasPorMomentoConsumo($mes = null, $año = null) {
+        $sentencia = "SELECT
+                    mc.id_mc,
+                    mc.momento as momento_consumo,
                     p.id_plato,
                     p.nombre as nombre_plato,
                     SUM(dv.cantidad_platos) as cantidad_vendida,
                     SUM(dv.subtotal) as total_vendido
                   FROM detalle_venta dv
                   JOIN plato p ON dv.id_plato = p.id_plato
-                  JOIN region r ON p.id_reg = r.id_reg
+                  JOIN momento_consumo mc ON p.id_mc = mc.id_mc
                   JOIN venta v ON dv.id_venta = v.id_venta";
         
         $conditions = [];
@@ -96,17 +135,20 @@ class VentasDAO {
             $conditions[] = "MONTH(v.fecha) = " . intval($mes);
         }
         
-        // Validar que año sea un número válido (y no "Todos")
+        // Validar que año sea un número válido (entre 2000 y 2100 como ejemplo)
         if (!is_null($año) && is_numeric($año)) {
-            $conditions[] = "YEAR(v.fecha) = " . intval($año);
+            $año = intval($año);
+            if ($año >= 2000 && $año <= 2100) {
+                $conditions[] = "YEAR(v.fecha) = " . $año;
+            }
         }
         
         if (!empty($conditions)) {
             $sentencia .= " WHERE " . implode(" AND ", $conditions);
         }
         
-        $sentencia .= " GROUP BY r.id_reg, r.nombre, p.id_plato, p.nombre
-                    ORDER BY r.nombre, total_vendido DESC";
+        $sentencia .= " GROUP BY mc.id_mc, mc.momento, p.id_plato, p.nombre
+                    ORDER BY mc.momento, total_vendido DESC";
         
         return $sentencia;
     }

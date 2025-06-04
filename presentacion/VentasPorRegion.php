@@ -5,8 +5,13 @@ require_once(__DIR__ . '/../logica/Venta.php');
 $anios = Venta::consultarAniosDisponibles();
 
 // Procesar filtro si se envió
-$añoFiltro = isset($_GET['año']) ? $_GET['año'] : null;
+$añoFiltro = isset($_GET['año']) && $_GET['año'] !== '' ? $_GET['año'] : null;
 $mesFiltro = isset($_GET['mes']) ? $_GET['mes'] : null;
+// Validar que el año sea numérico si se proporcionó
+if ($añoFiltro !== null && !is_numeric($añoFiltro)) {
+    $añoFiltro = null; // O podrías mostrar un mensaje de error
+}
+
 $ventasPorRegion = Venta::consultarVentasPorPlatoRegion($mesFiltro, $añoFiltro);
 ?>
 <!DOCTYPE html>
@@ -194,16 +199,17 @@ $ventasPorRegion = Venta::consultarVentasPorPlatoRegion($mesFiltro, $añoFiltro)
   </section>
 
   <div class="container py-5">
-    <div class="filtro-container">
+ <div class="filtro-container">
       <form method="get" class="row g-3 align-items-center">
         <div class="col-md-3">
           <label for="año" class="form-label fw-bold">Año:</label>
-          <select name="año" id="año" class="form-select">
-            <option value="">Todos</option>
-            <?php foreach($anios as $anio): ?>
-              <option value="<?= $anio ?>" <?= $añoFiltro == $anio ? 'selected' : '' ?>><?= $anio ?></option>
-            <?php endforeach; ?>
-          </select>
+          <input type="number" name="año" id="año" class="form-control" 
+                 min="2000" max="2100" step="1" 
+                 value="<?= $añoFiltro !== null ? htmlspecialchars($añoFiltro) : '' ?>"
+                 placeholder="Ej: 2025">
+          <small class="text-muted">Años disponibles: 
+              <?php echo implode(', ', $anios); ?>
+          </small>
         </div>
         <div class="col-md-3">
           <label for="mes" class="form-label fw-bold">Mes:</label>

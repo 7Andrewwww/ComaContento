@@ -90,7 +90,6 @@ class Venta {
         return $venta;
     }
     
-    // En Venta.php
     public static function consultarVentasPorPlatoRegion($mes = null, $año = null) {
         $conexion = new Conexion();
         $ventasDAO = new VentasDAO();
@@ -120,5 +119,36 @@ class Venta {
         
         $conexion->cerrar();
         return $ventasPorRegion;
+    }
+    
+    public static function consultarVentasPorMomentoConsumo($mes = null, $año = null) {
+        $conexion = new Conexion();
+        $ventasDAO = new VentasDAO();
+        $conexion->abrir();
+        $conexion->ejecutar($ventasDAO->consultarVentasPorMomentoConsumo($mes, $año));
+        
+        $ventasPorMomento = array();
+        while(($datos = $conexion->registro()) != null) {
+            $momentoId = $datos[0];
+            $momentoNombre = $datos[1];
+            $plato = new Plato($datos[2], $datos[3]);
+            
+            if (!isset($ventasPorMomento[$momentoId])) {
+                $ventasPorMomento[$momentoId] = array(
+                    'id_momento' => $momentoId,
+                    'nombre_momento' => $momentoNombre,
+                    'platos' => array()
+                );
+            }
+            
+            $ventasPorMomento[$momentoId]['platos'][] = array(
+                'plato' => $plato,
+                'cantidad_vendida' => $datos[4],
+                'total_vendido' => $datos[5]
+            );
+        }
+        
+        $conexion->cerrar();
+        return $ventasPorMomento;
     }
 }
