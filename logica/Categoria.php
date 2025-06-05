@@ -1,27 +1,30 @@
 <?php
-Class Categoria{
-    private $idCat;
+require_once(__DIR__ . '/../persistencia/Conexion.php');
+require_once(__DIR__ . '/../persistencia/CategoriaDAO.php');
+
+class Categoria {
+    private $id_cat;
     private $nombre;
     
-    public function __construct($idCat = "", $nombre = "") {
-        $this -> idCat = $idCat;
-        $this -> nombre = $nombre;
+    public function __construct($id_cat = "", $nombre = "") {
+        $this->id_cat = $id_cat;
+        $this->nombre = $nombre;
     }
     
-    public function getIdCat() {
-        return $this -> idCat;
-    }
+    public function getId() { return $this->id_cat; }
+    public function getNombre() { return $this->nombre; }
     
-    public function getNombre() {
-        return $this -> nombre;
-    }
-    
-    public function setIdCat($idCat) {
-        $this -> idCat = $idCat;
-    }
-    
-    public function setNombre($nombre) {
-        $this -> nombre = $nombre;
+    public static function consultarTodos() {
+        $conexion = new Conexion();
+        $categoriaDAO = new CategoriaDAO();
+        $conexion->abrir();
+        $conexion->ejecutar($categoriaDAO->consultarTodos());
+        $categorias = array();
+        while (($datos = $conexion->registro()) != null) {
+            $categorias[] = new Categoria($datos[0], $datos[1]);
+        }
+        $conexion->cerrar();
+        return $categorias;
     }
 }
 ?>

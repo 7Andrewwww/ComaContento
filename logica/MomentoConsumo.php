@@ -1,27 +1,30 @@
 <?php
-Class MomentoConsumo{
-    private $idMc;
-    private $nombre;
+require_once(__DIR__ . '/../persistencia/Conexion.php');
+require_once(__DIR__ . '/../persistencia/MomentoConsumoDAO.php');
+
+class MomentoConsumo {
+    private $id_mc;
+    private $momento;
     
-    public function __construct($idMc = "", $nombre = "") {
-        $this -> idMc = $idMc;
-        $this -> nombre = $nombre;
+    public function __construct($id_mc = "", $momento = "") {
+        $this->id_mc = $id_mc;
+        $this->momento = $momento;
     }
     
-    public function getIdMc() {
-        return $this -> idMc;
-    }
+    public function getId() { return $this->id_mc; }
+    public function getMomento() { return $this->momento; }
     
-    public function getNombre() {
-        return $this -> nombre;
-    }
-    
-    public function setIdRegion($idMc) {
-        $this -> idRegion = $idMc;
-    }
-    
-    public function setNombre($nombre) {
-        $this -> nombre = $nombre;
+    public static function consultarTodos() {
+        $conexion = new Conexion();
+        $momentoDAO = new MomentoConsumoDAO();
+        $conexion->abrir();
+        $conexion->ejecutar($momentoDAO->consultarTodos());
+        $momentos = array();
+        while (($datos = $conexion->registro()) != null) {
+            $momentos[] = new MomentoConsumo($datos[0], $datos[1]);
+        }
+        $conexion->cerrar();
+        return $momentos;
     }
 }
 ?>

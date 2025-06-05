@@ -207,9 +207,6 @@ $ventasPorRegion = Venta::consultarVentasPorPlatoRegion($mesFiltro, $añoFiltro)
                  min="2000" max="2100" step="1" 
                  value="<?= $añoFiltro !== null ? htmlspecialchars($añoFiltro) : '' ?>"
                  placeholder="Ej: 2025">
-          <small class="text-muted">Años disponibles: 
-              <?php echo implode(', ', $anios); ?>
-          </small>
         </div>
         <div class="col-md-3">
           <label for="mes" class="form-label fw-bold">Mes:</label>

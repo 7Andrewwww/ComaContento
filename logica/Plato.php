@@ -39,4 +39,29 @@ class Plato {
         $conexion->cerrar();
         return $plato;
     }
+    
+    public static function crear($nombre, $descripcion, $precio_base, $id_nivel, $foto,
+        $id_cat, $id_mc, $id_reg, $ingredientes_plato) {
+            $conexion = new Conexion();
+            $platoDAO = new PlatoDAO("", $nombre, $descripcion, $precio_base,
+                $id_nivel, $foto, $id_cat, $id_mc, $id_reg);
+            
+            $conexion->abrir();
+            $conexion->ejecutar($platoDAO->insertar());
+            
+            // Obtener el ID del plato recién insertado
+            $conexion->ejecutar($platoDAO->ultimoIdInsertado());
+            $datos = $conexion->registro();
+            $id_plato = $datos[0];
+            
+            // Insertar los ingredientes del plato
+            foreach ($ingredientes_plato as $ingrediente) {
+                $id_ing = $ingrediente['id_ing'];
+                $cantidad = $ingrediente['cantidad'];
+                $conexion->ejecutar($platoDAO->agregarIngrediente($id_ing, $cantidad));
+            }
+            
+            $conexion->cerrar();
+            return true;
+    }
 }
