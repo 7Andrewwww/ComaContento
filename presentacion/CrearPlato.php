@@ -1,193 +1,299 @@
 <?php
-require_once(__DIR__ . '/../logica/Plato.php');
-require_once(__DIR__ . '/../logica/Ingrediente.php');
-require_once(__DIR__ . '/../logica/Categoria.php');
-require_once(__DIR__ . '/../logica/Region.php');
-require_once(__DIR__ . '/../logica/MomentoConsumo.php');
-require_once(__DIR__ . '/../logica/NivelComplejidad.php');
+$mensaje = "";
+$error = "";
 
-$ingredientes = Ingrediente::consultarTodos();
-$categorias = Categoria::consultarTodos();
-$regiones = Region::consultarTodos();
-$momentos = MomentoConsumo::consultarTodos();
-$niveles = NivelComplejidad::consultarTodos();
-
-// Procesar formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = $_POST['nombre'];
-    $descripcion = $_POST['descripcion'];
-    $precio_base = $_POST['precio_base'];
-    $id_nivel = $_POST['id_nivel'];
-    $foto = $_POST['foto'];
-    $id_cat = $_POST['id_cat'];
-    $id_mc = $_POST['id_mc'];
-    $id_reg = $_POST['id_reg'];
-    
-    // Procesar ingredientes
-    $ingredientes_plato = [];
-    foreach ($_POST['ingredientes'] as $id_ing => $cantidad) {
-        if ($cantidad > 0) {
-            $ingredientes_plato[] = [
-                'id_ing' => $id_ing,
-                'cantidad' => $cantidad
-            ];
+if(isset($_POST['crear'])) {
+    try {
+        $foto = 'img/platos/default.jpg';
+        
+        if(isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+            $directorio = "img/platos/";
+            if(!is_dir($directorio)) {
+                mkdir($directorio, 0755, true);
+            }
+            
+            $nombreArchivo = uniqid() . '_' . basename($_FILES['foto']['name']);
+            $rutaCompleta = $directorio . $nombreArchivo;
+            
+            $tipoArchivo = strtolower(pathinfo($rutaCompleta, PATHINFO_EXTENSION));
+            $extensionesPermitidas = array('jpg', 'jpeg', 'png', 'gif');
+            
+            if(in_array($tipoArchivo, $extensionesPermitidas)) {
+                if(move_uploaded_file($_FILES['foto']['tmp_name'], $rutaCompleta)) {
+                    $foto = $rutaCompleta;
+                } else {
+                    throw new Exception("Error al subir la imagen");
+                }
+            } else {
+                throw new Exception("Solo se permiten archivos JPG, JPEG, PNG o GIF");
+            }
         }
-    }
-    
-    if (Plato::crear($nombre, $descripcion, $precio_base, $id_nivel, $foto,
-        $id_cat, $id_mc, $id_reg, $ingredientes_plato)) {
-            $mensaje = "Plato creado exitosamente!";
+        
+        $nivel = new NivelComplejidad($_POST['nivel']);
+        $categoria = new Categoria($_POST['categoria']);
+        $momento = new MomentoConsumo($_POST['momento']);
+        $region = new Region($_POST['region']);
+        $encargado = new Encargado($_POST['encargado']);
+        
+        $plato = new Plato(
+            $_POST['id'],
+            $_POST['nombre'],
+            $_POST['descripcion'],
+            $_POST['precio'],
+            $nivel,
+            $foto,
+            $categoria,
+            $momento,
+            $region,
+            $encargado
+            );
+        
+        $ingredientes = array();
+        if(isset($_POST['ingredientes']) && is_array($_POST['ingredientes'])) {
+            foreach($_POST['ingredientes'] as $id_ing) {
+                if(isset($_POST['cantidad_'.$id_ing]) && $_POST['cantidad_'.$id_ing] > 0) {
+                    $ingredientes[] = array(
+                        'id' => $id_ing,
+                        'cantidad' => $_POST['cantidad_'.$id_ing]
+                    );
+                }
+            }
+        }
+        
+        if($plato->crear($ingredientes)) {
+            $mensaje = "Plato creado exitosamente";
         } else {
             $error = "Error al crear el plato";
         }
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
 }
+
+$niveles = NivelComplejidad::consultarTodos();
+$categorias = Categoria::consultarTodos();
+$momentos = MomentoConsumo::consultarTodos();
+$regiones = Region::consultarTodos();
+$encargados = Encargado::consultarTodos();
+$ingredientes = Plato::listarTodosIngredientes();
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Plato | Colombiano, Coma Contento</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <style>
-    /* Mantenemos los mismos estilos que en VentasPorRegion.php */
-    body {
-      background-image: url('../imagenes/fondo.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      position: relative;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(255, 255, 255, 0.7);
-      z-index: -1;
-    }
-    
-    .navbar {
-      background: linear-gradient(to right, #fcd116, #003893, #ce1126);
-      border-bottom-left-radius: 1rem;
-      border-bottom-right-radius: 1rem;
-    }
-    
-    .navbar-brand, .nav-link {
-      color: white !important;
-      font-weight: 600;
-    }
-    
-    .hero {
-      background-size: cover;
-      background-position: center;
-      color: black;
-      padding: 4rem 2rem;
-      text-align: center;
-      background-blend-mode: overlay;
-      background-color: rgba(0, 0, 0, 0);
-      border-radius: 0 0 2rem 2rem;
-    }
-    
-    .card {
-      border: none;
-      border-radius: 1.5rem;
-      overflow: hidden;
-      background-color: #fff;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-    
-    .card-header {
-      background: linear-gradient(to right, #fcd116, #003893);
-      color: white;
-      font-weight: bold;
-      border-radius: 1.5rem 1.5rem 0 0 !important;
-    }
-    
-    .btn-primary {
-      background-color: #003893;
-      border-color: #003893;
-      border-radius: 50px;
-    }
-    
-    .btn-primary:hover {
-      background-color: #002366;
-      border-color: #002366;
-    }
-    
-    .btn-warning {
-      background-color: #fcd116;
-      border-color: #fcd116;
-      color: #333;
-      border-radius: 50px;
-    }
-    
-    .btn-warning:hover {
-      background-color: #e6b800;
-      border-color: #e6b800;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 2rem;
-    }
-    
-    th {
-      background-color: #003893;
-      color: white;
-      padding: 12px;
-      text-align: left;
-    }
-    
-    td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    tr:nth-child(even) {
-      background-color: rgba(0, 56, 147, 0.05);
-    }
-    
-    tr:hover {
-      background-color: rgba(252, 209, 22, 0.1);
-    }
-    
-    .filtro-container {
-      background-color: white;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .momento-header {
-      background-color: #003893;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      margin-top: 20px;
-      margin-bottom: 10px;
-    }
-    
-    footer {
-      background-color: #003893;
-      color: white;
-      text-align: center;
-      padding: 1.5rem;
-      border-top-left-radius: 2rem;
-      border-top-right-radius: 2rem;
-      margin-top: 3rem;
-    }
-    
+    <meta charset="UTF-8">
+    <title>Crear Nuevo Plato</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: #fff;
+        }
+
+        .form-container {
+            color: #222;
+             background: rgba(255, 255, 255, 0.85); /* Subido de 0.15 a 0.85 */
+             backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
+              border-radius: 16px;
+              padding: 30px;
+              max-width: 800px;
+              margin: 40px auto;
+               box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 5px;
+            font-size: 15px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 12px;
+            background-color: #ff9800;
+            color: #fff;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e68a00;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.8);
+            color: #fff;
+        }
+
+        .alert-danger {
+            background-color: rgba(244, 67, 54, 0.8);
+            color: #fff;
+        }
+
+        .ingrediente-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .cantidad-container {
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<?php include("presentacion/fondo.php"); ?>
+
+<div class="form-container">
+    <h1>Crear Nuevo Plato</h1>
+
+    <?php if($mensaje != ""): ?>
+        <div class="alert alert-success"><?php echo $mensaje ?></div>
+    <?php endif; ?>
+
+    <?php if($error != ""): ?>
+        <div class="alert alert-danger"><?php echo $error ?></div>
+    <?php endif; ?>
+
+    <form method="post" action="" enctype="multipart/form-data">
+        <label for="id">ID del Plato:</label>
+        <input type="text" id="id" name="id" required>
+
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
+
+        <label for="descripcion">Descripción:</label>
+        <textarea id="descripcion" name="descripcion" required></textarea>
+
+        <label for="precio">Precio Base:</label>
+        <input type="number" id="precio" name="precio" step="0.01" min="0" required>
+
+        <label for="foto">Foto del Plato:</label>
+        <input type="file" id="foto" name="foto" accept="image/*">
+
+        <label for="nivel">Nivel de Complejidad:</label>
+        <select id="nivel" name="nivel">
+            <option value="">Seleccione...</option>
+            <?php foreach($niveles as $nivel): ?>
+                <option value="<?php echo $nivel->getId() ?>"><?php echo $nivel->getNombre() ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="categoria">Categoría:</label>
+        <select id="categoria" name="categoria">
+            <option value="">Seleccione...</option>
+            <?php foreach($categorias as $cat): ?>
+                <option value="<?php echo $cat->getId() ?>"><?php echo $cat->getNombre() ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="momento">Momento de Consumo:</label>
+        <select id="momento" name="momento">
+            <option value="">Seleccione...</option>
+            <?php foreach($momentos as $mom): ?>
+                <option value="<?php echo $mom->getId() ?>"><?php echo $mom->getMomento() ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="region">Región:</label>
+        <select id="region" name="region">
+            <option value="">Seleccione...</option>
+            <?php foreach($regiones as $reg): ?>
+                <option value="<?php echo $reg->getId() ?>"><?php echo $reg->getNombre() ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <label for="encargado">Encargado:</label>
+        <select id="encargado" name="encargado">
+            <option value="">Seleccione...</option>
+            <?php foreach($encargados as $enc): ?>
+                <option value="<?php echo $enc->getId() ?>"><?php echo $enc->getNombre() ?></option>
+            <?php endforeach; ?>
+        </select>
+
+        <h3>Ingredientes</h3>
+        <div id="ingredientes-container">
+            <?php foreach($ingredientes as $ing): ?>
+                <div class="ingrediente-item">
+                    <input type="checkbox" name="ingredientes[]" value="<?php echo $ing->getId() ?>" 
+                           id="ing_<?php echo $ing->getId() ?>" class="ingrediente-check">
+                    <label for="ing_<?php echo $ing->getId() ?>"><?php echo $ing->getNombre() ?></label>
+
+                    <div class="cantidad-container hidden">
+                        <label>Cantidad:</label>
+                        <input type="number" name="cantidad_<?php echo $ing->getId() ?>" step="0.01" min="0.01">
+                        <span><?php echo $ing->getUnidadMedida() ?></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <button type="submit" name="crear">Crear Plato</button>
+    </form>
+</div>
+
+<script>
+    document.querySelectorAll('.ingrediente-check').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const container = this.closest('.ingrediente-item').querySelector('.cantidad-container');
+            if(this.checked) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        });
+    });
+</script>
+<a href="?pid=<?php echo base64_encode('presentacion/Inicio.php'); ?>" class="btn btn-warning btn-flotante">
+    <i class="fas fa-home"></i>
+</a>
+
+<style>
     .btn-flotante {
         position: fixed;
         bottom: 20px;
@@ -200,111 +306,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         justify-content: center;
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         z-index: 1000;
+        text-decoration: none; /* Elimina el subrayado del enlace */
+        color: #212529; /* Color del icono */
+        transition: all 0.3s ease; /* Transición suave para efectos hover */
     }
-  </style>
-</head>
-<body>
-    <div class="container py-5">
-        <h1>Crear Nuevo Plato</h1>
-        
-        <?php if (isset($mensaje)): ?>
-            <div class="alert alert-success"><?= $mensaje ?></div>
-        <?php endif; ?>
-        
-        <?php if (isset($error)): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
-        
-        <form method="POST">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre del Plato</label>
-                        <input type="text" name="nombre" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Descripción</label>
-                        <textarea name="descripcion" class="form-control" rows="3" required></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Precio Base</label>
-                        <input type="number" name="precio_base" class="form-control" step="0.01" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">URL de la Foto</label>
-                        <input type="url" name="foto" class="form-control">
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Categoría</label>
-                        <select name="id_cat" class="form-select" required>
-                            <?php foreach ($categorias as $categoria): ?>
-                                <option value="<?= $categoria->getId() ?>"><?= $categoria->getNombre() ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Región</label>
-                        <select name="id_reg" class="form-select" required>
-                            <?php foreach ($regiones as $region): ?>
-                                <option value="<?= $region->getId() ?>"><?= $region->getNombre() ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Momento de Consumo</label>
-                        <select name="id_mc" class="form-select" required>
-                            <?php foreach ($momentos as $momento): ?>
-                                <option value="<?= $momento->getId() ?>"><?= $momento->getMomento() ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Nivel de Complejidad</label>
-                        <select name="id_nivel" class="form-select" required>
-                            <?php foreach ($niveles as $nivel): ?>
-                                <option value="<?= $nivel->getId() ?>"><?= $nivel->getNombre() ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <h3 class="mt-4">Ingredientes</h3>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Ingrediente</th>
-                            <th>Cantidad</th>
-                            <th>Unidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($ingredientes as $ingrediente): ?>
-                            <tr>
-                                <td><?= $ingrediente->getNombre() ?></td>
-                                <td>
-                                    <input type="number" name="ingredientes[<?= $ingrediente->getId() ?>]" 
-                                           class="form-control" step="0.01" min="0" value="0">
-                                </td>
-                                <td><?= $ingrediente->getUnidadMedida() ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Guardar Plato</button>
-        </form>
-    </div>
+    
+    .btn-flotante:hover {
+        transform: scale(1.1); /* Efecto de escala al pasar el mouse */
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        color: #212529; /* Mantiene el color del icono al hacer hover */
+    }
+</style>
 </body>
 </html>

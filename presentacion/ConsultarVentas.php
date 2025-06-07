@@ -1,12 +1,25 @@
 <?php
-require_once(__DIR__ . '/../logica/Venta.php');
-// Obtener años disponibles para el filtro
+require_once("persistencia/Conexion.php");
+require_once("persistencia/VentasDAO.php");
+require_once("logica/Venta.php");
+require_once("logica/Plato.php");
+
+// Obtener años disponibles
 $anios = Venta::consultarAniosDisponibles();
 
-// Procesar filtro si se envió
-$añoFiltro = isset($_GET['año']) ? $_GET['año'] : null;
+// Procesar filtros
+$añoFiltro = isset($_GET['año']) ? intval($_GET['año']) : null;
+$mesFiltro = isset($_GET['mes']) ? intval($_GET['mes']) : null;
+
+// Consultar ventas por mes
 $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
+
+// Consultar ventas por plato si hay filtros de mes y año
+if ($mesFiltro && $añoFiltro) {
+    $ventasPorPlato = Venta::consultarVentasPorPlato($mesFiltro, $añoFiltro);
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -142,20 +155,45 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
       border-top-right-radius: 2rem;
       margin-top: 3rem;
     }
+    
+    .btn-flotante {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      text-decoration: none;
+      color: #212529;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-flotante:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
+<?php
+include("presentacion/fondo.php");
+?>
   <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand" href="../presentacion/Inicio.php">Colombiano, Coma Contento</a>
+      <a class="navbar-brand" href="?pid=<?= base64_encode('presentacion/Inicio.php') ?>">Colombiano, Coma Contento</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="../presentacion/Inicio.php#about">Nosotros</a></li>
-          <li class="nav-item"><a class="nav-link" href="../presentacion/Inicio.php#modulos">Módulos</a></li>
-          <li class="nav-item"><a class="nav-link" href="../presentacion/Inicio.php#contacto">Contacto</a></li>
+          <li class="nav-item"><a class="nav-link" href="?pid=<?= base64_encode('presentacion/Inicio.php#about') ?>">Nosotros</a></li>
+          <li class="nav-item"><a class="nav-link" href="?pid=<?= base64_encode('presentacion/Inicio.php#modulos') ?>">Módulos</a></li>
+          <li class="nav-item"><a class="nav-link" href="?pid=<?= base64_encode('presentacion/Inicio.php#contacto') ?>">Contacto</a></li>
         </ul>
       </div>
     </div>
@@ -170,27 +208,25 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
 
   <div class="container py-5">
     <div class="filtro-container">
-    <form method="get" class="row g-3 align-items-center">
+      <form method="get" action="?pid=<?= base64_encode('presentacion/ConsultarVentas.php') ?>" class="row g-3 align-items-center">
+        <input type="hidden" name="pid" value="<?= base64_encode('presentacion/ConsultarVentas.php') ?>">
         <div class="col-md-4">
-            <label for="año" class="form-label fw-bold">Filtrar por año:</label>
-            <input type="number" 
-                   name="año" 
-                   id="año" 
-                   class="form-control" 
-                   min="2000" 
-                   max="<?= date('Y') + 1 ?>" 
-                   step="1"
-                   value="<?= $añoFiltro ?>" 
-                   placeholder="Ej: 2023">
+          <label for="año" class="form-label fw-bold">Filtrar por año:</label>
+          <select name="año" id="año" class="form-select">
+            <option value="">Todos los años</option>
+            <?php foreach($anios as $anio): ?>
+              <option value="<?= $anio ?>" <?= ($añoFiltro == $anio) ? 'selected' : '' ?>><?= $anio ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
         <div class="col-md-4">
-            <button type="submit" class="btn btn-warning mt-md-4">Filtrar</button>
-            <?php if($añoFiltro): ?>
-                <a href="ConsultarVentas.php" class="btn btn-outline-secondary mt-md-4 ms-2">Limpiar</a>
-            <?php endif; ?>
+          <button type="submit" class="btn btn-warning mt-md-4">Filtrar</button>
+          <?php if($añoFiltro): ?>
+            <a href="?pid=<?= base64_encode('presentacion/ConsultarVentas.php') ?>" class="btn btn-outline-secondary mt-md-4 ms-2">Limpiar</a>
+          <?php endif; ?>
         </div>
-    </form>
-</div>
+      </form>
+    </div>
 
     <div class="card">
       <div class="card-header">
@@ -216,7 +252,7 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
                   <td>$<?= number_format($ventaMes['total_ventas'], 2) ?></td>
                   <td><?= $ventaMes['cantidad_ventas'] ?></td>
                   <td>
-                    <a href="?mes=<?= $ventaMes['mes'] ?>&año=<?= $ventaMes['año'] ?>" class="btn btn-sm btn-primary">
+                    <a href="?pid=<?= base64_encode('presentacion/ConsultarVentas.php') ?>&mes=<?= $ventaMes['mes'] ?>&año=<?= $ventaMes['año'] ?>" class="btn btn-sm btn-primary">
                       Ver Detalle
                     </a>
                   </td>
@@ -228,19 +264,14 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
       </div>
     </div>
 
-    <?php if(isset($_GET['mes']) && isset($_GET['año'])): ?>
-      <?php 
-      $mes = $_GET['mes'];
-      $año = $_GET['año'];
-      $ventasPorPlato = Venta::consultarVentasPorPlato($mes, $año);
-      ?>
-      <div class="card">
-        <div class="card-header">
-          <h3 class="mb-0">Ventas por Plato - <?= DateTime::createFromFormat('!m', $mes)->format('F') ?> <?= $año ?></h3>
+    <?php if(isset($ventasPorPlato) && !empty($ventasPorPlato)): ?>
+      <div class="card mt-4" id="detalle-ventas">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Detalle de Ventas - <?= DateTime::createFromFormat('!m', $mesFiltro)->format('F') ?> <?= $añoFiltro ?></h3>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-striped">
               <thead>
                 <tr>
                   <th>Plato</th>
@@ -251,7 +282,7 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
               <tbody>
                 <?php foreach($ventasPorPlato as $venta): ?>
                   <tr>
-                    <td><?= $venta->getPlato()->getNombre() ?></td>
+                    <td><?= htmlspecialchars($venta->getPlato()->getNombre()) ?></td>
                     <td><?= $venta->getCantidadPlatos() ?></td>
                     <td>$<?= number_format($venta->getSubtotal(), 2) ?></td>
                   </tr>
@@ -267,25 +298,9 @@ $ventasPorMes = Venta::consultarVentasPorMes($añoFiltro);
   <footer>
     <p class="mb-0">&copy; 2025 Colombiano, Coma Contento. Todos los derechos reservados.</p>
   </footer>
-  <!-- Añade esto antes del cierre del body (</body>) -->
-<a href="../presentacion/Inicio.php" class="btn btn-warning btn-flotante">
-    <i class="fas fa-home"></i>
-</a>
 
-<style>
-    .btn-flotante {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        z-index: 1000;
-    }
-</style>
+  <a href="?pid=<?= base64_encode('presentacion/Inicio.php') ?>" class="btn btn-warning btn-flotante">
+    <i class="fas fa-home"></i>
+  </a>
 </body>
 </html>

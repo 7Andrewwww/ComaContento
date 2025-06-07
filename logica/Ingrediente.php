@@ -1,6 +1,6 @@
 <?php
-require_once(__DIR__ . '/../persistencia/Conexion.php');
-require_once(__DIR__ . '/../persistencia/IngredienteDAO.php');
+require_once("persistencia/Conexion.php");
+require_once("persistencia/IngredienteDAO.php");
 
 class Ingrediente {
     private $id_ing;
@@ -13,9 +13,15 @@ class Ingrediente {
         $this->unidad_medida = $unidad_medida;
     }
     
+    // Getters
     public function getId() { return $this->id_ing; }
     public function getNombre() { return $this->nombre; }
     public function getUnidadMedida() { return $this->unidad_medida; }
+    
+    // Setters
+    public function setId($id_ing) { $this->id_ing = $id_ing; }
+    public function setNombre($nombre) { $this->nombre = $nombre; }
+    public function setUnidadMedida($unidad_medida) { $this->unidad_medida = $unidad_medida; }
     
     public static function consultarTodos() {
         $conexion = new Conexion();

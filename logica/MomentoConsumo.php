@@ -1,6 +1,6 @@
 <?php
-require_once(__DIR__ . '/../persistencia/Conexion.php');
-require_once(__DIR__ . '/../persistencia/MomentoConsumoDAO.php');
+require_once("persistencia/Conexion.php");
+require_once("persistencia/MomentoConsumoDAO.php");
 
 class MomentoConsumo {
     private $id_mc;

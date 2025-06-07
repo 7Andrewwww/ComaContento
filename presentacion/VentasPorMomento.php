@@ -1,7 +1,4 @@
 <?php
-require_once(__DIR__ . '/../logica/Venta.php');
-
-// Obtener años disponibles para mostrar como sugerencia
 $anios = Venta::consultarAniosDisponibles();
 
 // Procesar filtro si se envió
@@ -177,6 +174,9 @@ $ventasPorMomento = Venta::consultarVentasPorMomentoConsumo($mesFiltro, $añoFil
   </style>
 </head>
 <body>
+<?php
+include("presentacion/fondo.php");
+?>
   <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
     <div class="container-fluid">
       <a class="navbar-brand" href="../presentacion/Inicio.php">Colombiano, Coma Contento</a>

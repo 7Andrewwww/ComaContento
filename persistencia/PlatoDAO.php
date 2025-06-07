@@ -9,9 +9,10 @@ class PlatoDAO {
     private $id_cat;
     private $id_mc;
     private $id_reg;
+    private $id_enc;
     
-    public function __construct($id_plato="", $nombre="", $descripcion="", $precio_base="",
-        $id_nivel="", $foto="", $id_cat="", $id_mc="", $id_reg="") {
+    public function __construct($id_plato = "", $nombre = "", $descripcion = "", $precio_base = "",
+        $id_nivel = "", $foto = "", $id_cat = "", $id_mc = "", $id_reg = "", $id_enc = "") {
             $this->id_plato = $id_plato;
             $this->nombre = $nombre;
             $this->descripcion = $descripcion;
@@ -21,27 +22,67 @@ class PlatoDAO {
             $this->id_cat = $id_cat;
             $this->id_mc = $id_mc;
             $this->id_reg = $id_reg;
+            $this->id_enc = $id_enc;
     }
     
-    public function insertar() {
-        return "INSERT INTO plato (nombre, descripcion, precio_base, id_nivel, foto, id_cat, id_mc, id_reg)
-                VALUES ('$this->nombre', '$this->descripcion', $this->precio_base,
-                        $this->id_nivel, '$this->foto', $this->id_cat, $this->id_mc, $this->id_reg)";
+    public function consultar() {
+        return "SELECT p.nombre, p.descripcion, p.precio_base, p.foto,
+                       p.id_nivel, nc.nombre as nivel_nombre,
+                       p.id_cat, c.nombre as categoria_nombre,
+                       p.id_mc, mc.momento as momento_consumo,
+                       p.id_reg, r.nombre as region_nombre,
+                       p.id_enc, e.nombre as encargado_nombre
+                FROM plato p
+                LEFT JOIN nivel_complejidad nc ON p.id_nivel = nc.id_nivel
+                LEFT JOIN categoria c ON p.id_cat = c.id_cat
+                LEFT JOIN momento_consumo mc ON p.id_mc = mc.id_mc
+                LEFT JOIN region r ON p.id_reg = r.id_reg
+                LEFT JOIN encargado e ON p.id_enc = e.id_enc
+                WHERE p.id_plato = '" . $this->id_plato . "'";
     }
     
-    public function ultimoIdInsertado() {
-        return "SELECT LAST_INSERT_ID()";
+    public function consultarTodos() {
+        return "SELECT p.id_plato, p.nombre, p.descripcion, p.precio_base, p.foto,
+                       nc.nombre as nivel, c.nombre as categoria,
+                       mc.momento as momento, r.nombre as region
+                FROM plato p
+                LEFT JOIN nivel_complejidad nc ON p.id_nivel = nc.id_nivel
+                LEFT JOIN categoria c ON p.id_cat = c.id_cat
+                LEFT JOIN momento_consumo mc ON p.id_mc = mc.id_mc
+                LEFT JOIN region r ON p.id_reg = r.id_reg
+                ORDER BY p.nombre";
+    }
+    
+    public function crear() {
+        return "INSERT INTO plato (id_plato, nombre, descripcion, precio_base, id_nivel, foto, id_cat, id_mc, id_reg, id_enc)
+                VALUES ('" . $this->id_plato . "',
+                        '" . $this->nombre . "',
+                        '" . $this->descripcion . "',
+                        " . $this->precio_base . ",
+                        " . ($this->id_nivel ?: 'NULL') . ",
+                        '" . $this->foto . "',
+                        " . ($this->id_cat ?: 'NULL') . ",
+                        " . ($this->id_mc ?: 'NULL') . ",
+                        " . ($this->id_reg ?: 'NULL') . ",
+                        " . ($this->id_enc ?: 'NULL') . ")";
     }
     
     public function agregarIngrediente($id_ing, $cantidad) {
         return "INSERT INTO plato_ingrediente (id_plato, id_ing, cantidad)
-                VALUES ($this->id_plato, $id_ing, $cantidad)";
+                VALUES ('" . $this->id_plato . "',
+                        '" . $id_ing . "',
+                        " . $cantidad . ")";
     }
     
-    public function consultarPorId($id_plato) {
-        return "SELECT id_plato, nombre, descripcion, precio_base, id_nivel, foto,
-                   id_cat, id_mc, id_reg
-            FROM plato
-            WHERE id_plato = $id_plato";
+    public function consultarIngredientes() {
+        return "SELECT i.id_ing, i.nombre, i.unidad_medida, pi.cantidad
+                FROM plato_ingrediente pi
+                JOIN ingrediente i ON pi.id_ing = i.id_ing
+                WHERE pi.id_plato = '" . $this->id_plato . "'";
+    }
+    
+    public function consultarTodosIngredientes() {
+        return "SELECT id_ing, nombre, unidad_medida FROM ingrediente ORDER BY nombre";
     }
 }
+?>

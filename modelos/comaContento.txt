@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `nivel_complejidad` (
 
 -- Tabla plato 
 CREATE TABLE IF NOT EXISTS `plato` (
-  `id_plato` INT NOT NULL AUTO_INCREMENT,
+  `id_plato` INT NOT NULL,
   `nombre` VARCHAR(45) NULL,
   `descripcion` LONGTEXT NULL,
   `precio_base` DECIMAL(10,2) NULL,
@@ -95,16 +95,24 @@ CREATE TABLE IF NOT EXISTS `detalle_venta` (
   CONSTRAINT `fk_dv_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`)
 ) ENGINE=InnoDB;
 
--- Tabla carta
+-- Tabla carta (MODIFICADA - eliminada la referencia directa a plato)
 CREATE TABLE IF NOT EXISTS `carta` (
   `id_carta` INT NOT NULL,
   `fecha_inicio` DATE NULL,
   `fecha_fin` DATE NULL,
   `es_vigente` TINYINT(1) NULL,
   `descripcion` LONGTEXT NULL,
+  PRIMARY KEY (`id_carta`)
+) ENGINE=InnoDB;
+
+-- Tabla carta_plato (NUEVA - relación muchos-a-muchos)
+CREATE TABLE IF NOT EXISTS `carta_plato` (
+  `id_carta` INT NOT NULL,
   `id_plato` INT NOT NULL,
-  PRIMARY KEY (`id_carta`),
-  CONSTRAINT `fk_carta_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`)
+  `orden` INT NULL COMMENT 'Orden de aparición en la carta',
+  PRIMARY KEY (`id_carta`, `id_plato`),
+  CONSTRAINT `fk_cartaplato_carta` FOREIGN KEY (`id_carta`) REFERENCES `carta` (`id_carta`),
+  CONSTRAINT `fk_cartaplato_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`)
 ) ENGINE=InnoDB;
 
 -- Insertar niveles de complejidad
@@ -114,5 +122,3 @@ INSERT INTO `nivel_complejidad` (`id_nivel`, `nombre`, `descripcion`) VALUES
 (3, 'Intermedio', 'Platos que requieren múltiples pasos y técnicas'),
 (4, 'Difícil', 'Preparaciones complejas con técnicas avanzadas'),
 (5, 'Gourmet', 'Alta cocina con técnicas profesionales e ingredientes especiales');
-
-

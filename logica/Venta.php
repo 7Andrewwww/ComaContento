@@ -1,7 +1,6 @@
 <?php
-require_once(__DIR__ . '/../persistencia/Conexion.php');
-require_once(__DIR__ . '/../persistencia/VentasDAO.php');
-require_once(__DIR__ . '/Plato.php');
+require_once("persistencia/Conexion.php");
+require_once("persistencia/VentasDAO.php");
 
 class Venta {
     private $id_venta;

@@ -1,6 +1,6 @@
 <?php
-require_once(__DIR__ . '/../persistencia/Conexion.php');
-require_once(__DIR__ . '/../persistencia/NivelComplejidadDAO.php');
+require_once("persistencia/Conexion.php");
+require_once("persistencia/NivelComplejidadDAO.php");
 
 class NivelComplejidad {
     private $id_nivel;
