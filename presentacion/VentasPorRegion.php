@@ -276,8 +276,8 @@ include("presentacion/fondo.php");
     <p class="mb-0">&copy; 2025 Colombiano, Coma Contento. Todos los derechos reservados.</p>
   </footer>
 
-  <a href="../presentacion/Inicio.php" class="btn btn-warning btn-flotante">
+<a href="?pid=<?php echo base64_encode('presentacion/Inicio.php'); ?>" class="btn btn-warning btn-flotante">
     <i class="fas fa-home"></i>
-  </a>
+</a>
 </body>
 </html>

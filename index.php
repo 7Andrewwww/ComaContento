@@ -1,5 +1,4 @@
 <?php
-
 require_once("logica/Carta.php");
 require_once("logica/Categoria.php");
 require_once("logica/Encargado.php");
