@@ -1,0 +1,257 @@
+CREATE TABLE total_ventas_region (
+    id_region INT PRIMARY KEY,
+    nombre_region VARCHAR(100),
+    total_cantidad INT DEFAULT 0,
+    total_venta DECIMAL(10,2) DEFAULT 0,
+    CONSTRAINT fk_region_ventas FOREIGN KEY (id_region) REFERENCES region(id_reg)
+);
+
+
+------------------Triggers-----------------
+
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_insert_detalle_venta$$
+
+CREATE TRIGGER trg_insert_detalle_venta
+AFTER INSERT ON detalle_venta
+FOR EACH ROW
+BEGIN
+  DECLARE region_id INT;
+  DECLARE total_plato DECIMAL(10,2);
+  DECLARE cantidad INT;
+  DECLARE nombre VARCHAR(100);
+
+  SELECT p.id_reg, r.nombre, NEW.cantidad_platos * p.precio_base
+  INTO region_id, nombre, total_plato
+  FROM plato p
+  JOIN region r ON p.id_reg = r.id_reg
+  WHERE p.id_plato = NEW.id_plato;
+
+  SET cantidad = NEW.cantidad_platos;
+
+  INSERT INTO total_ventas_region (id_region, nombre_region, total_cantidad, total_venta)
+  VALUES (region_id, nombre, cantidad, total_plato)
+  ON DUPLICATE KEY UPDATE 
+    total_cantidad = total_cantidad + cantidad,
+    total_venta = total_venta + total_plato;
+END$$
+
+DELIMITER ;
+
+------------------Triggers-----------------
+
+DELIMITER $$
+
+CREATE TRIGGER trg_update_detalle_venta
+AFTER UPDATE ON detalle_venta
+FOR EACH ROW
+BEGIN
+  DECLARE region_id INT;
+  DECLARE viejo_total DECIMAL(10,2);
+  DECLARE nuevo_total DECIMAL(10,2);
+  DECLARE cantidad_diff INT;
+
+  SELECT p.id_reg INTO region_id
+  FROM plato p
+  WHERE p.id_plato = NEW.id_plato;
+
+  SET viejo_total = OLD.cantidad_platos * (SELECT precio_base FROM plato WHERE id_plato = OLD.id_plato);
+  SET nuevo_total = NEW.cantidad_platos * (SELECT precio_base FROM plato WHERE id_plato = NEW.id_plato);
+  SET cantidad_diff = NEW.cantidad_platos - OLD.cantidad_platos;
+
+  UPDATE total_ventas_region
+  SET 
+    total_cantidad = total_cantidad + cantidad_diff,
+    total_venta = total_venta - viejo_total + nuevo_total
+  WHERE id_region = region_id;
+END$$
+
+DELIMITER ;
+
+------------------Triggers-----------------
+
+DELIMITER $$
+
+CREATE TRIGGER trg_delete_detalle_venta
+AFTER DELETE ON detalle_venta
+FOR EACH ROW
+BEGIN
+  DECLARE region_id INT;
+  DECLARE total_plato DECIMAL(10,2);
+  DECLARE cantidad INT;
+
+  SELECT p.id_reg, OLD.cantidad_platos * p.precio_base
+  INTO region_id, total_plato
+  FROM plato p
+  WHERE p.id_plato = OLD.id_plato;
+
+  SET cantidad = OLD.cantidad_platos;
+
+  UPDATE total_ventas_region
+  SET 
+    total_cantidad = total_cantidad - cantidad,
+    total_venta = total_venta - total_plato
+  WHERE id_region = region_id;
+END$$
+
+DELIMITER ;
+
+
+------------------Procedures-----------------
+
+DELIMITER //
+CREATE PROCEDURE Consultar_Resumen_Ventas_Por_Mes(IN p_año INT)
+BEGIN
+    SELECT
+        YEAR(v.fecha) AS año,
+        MONTH(v.fecha) AS mes,
+        SUM(v.valor_total) AS total_ventas,
+        COUNT(v.id_venta) AS cantidad_ventas
+    FROM venta v
+    WHERE (p_año IS NULL OR YEAR(v.fecha) = p_año)
+    GROUP BY YEAR(v.fecha), MONTH(v.fecha)
+    ORDER BY año DESC, mes DESC;
+END //
+DELIMITER ;
+
+------------------Procedures-----------------
+
+DELIMITER //
+CREATE PROCEDURE Consultar_Ventas_Plato_Por_Mes_Año(IN p_mes INT, IN p_año INT)
+BEGIN
+    SELECT
+        p.id_plato,
+        p.nombre AS nombre_plato,
+        SUM(dv.cantidad_platos) AS cantidad_vendida,
+        SUM(dv.subtotal) AS total_vendido
+    FROM detalle_venta dv
+    JOIN plato p ON dv.id_plato = p.id_plato
+    JOIN venta v ON dv.id_venta = v.id_venta
+    WHERE MONTH(v.fecha) = p_mes AND YEAR(v.fecha) = p_año
+    GROUP BY p.id_plato, p.nombre
+    ORDER BY total_vendido DESC;
+END //
+DELIMITER ;
+
+------------------Procedures-----------------
+
+DELIMITER //
+CREATE PROCEDURE Consultar_Años_Disponibles()
+BEGIN
+    SELECT DISTINCT YEAR(fecha) AS año
+    FROM venta
+    ORDER BY año DESC;
+END //
+DELIMITER ;
+
+------------------Procedures-----------------
+
+DELIMITER //
+CREATE PROCEDURE Consultar_Detalle_Venta_Por_Id(IN p_id_venta INT)
+BEGIN
+    SELECT
+        v.id_venta,
+        v.fecha,
+        v.valor_total,
+        p.id_plato,
+        p.nombre AS nombre_plato,
+        dv.cantidad_platos,
+        dv.precio_unitario,
+        dv.subtotal
+    FROM venta v
+    JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+    JOIN plato p ON dv.id_plato = p.id_plato
+    WHERE v.id_venta = p_id_venta;
+END //
+DELIMITER ;
+
+------------------Vistas-----------------
+
+CREATE OR REPLACE VIEW VistasVentasPorRegion AS
+SELECT
+    r.id_reg,
+    r.nombre AS nombre_region,
+    p.id_plato,
+    p.nombre AS nombre_plato,
+    SUM(dv.cantidad_platos) AS cantidad_vendida,
+    SUM(dv.subtotal) AS total_vendido,
+    YEAR(v.fecha) AS año_venta,
+    MONTH(v.fecha) AS mes_venta
+FROM
+    venta v
+JOIN
+    detalle_venta dv ON v.id_venta = dv.id_venta
+JOIN
+    plato p ON dv.id_plato = p.id_plato
+JOIN
+    region r ON p.id_reg = r.id_reg
+GROUP BY
+    r.id_reg, r.nombre, p.id_plato, p.nombre, YEAR(v.fecha), MONTH(v.fecha)
+ORDER BY
+    r.nombre, total_vendido DESC;
+
+
+------------------Vistas-----------------
+
+CREATE OR REPLACE VIEW VistasVentasDetalle AS
+SELECT
+    v.id_venta,
+    v.fecha,
+    v.valor_total,
+    dv.id_plato,
+    p.nombre AS nombre_plato,
+    dv.cantidad_platos,
+    dv.precio_unitario,
+    dv.subtotal,
+    YEAR(v.fecha) AS año_venta,
+    MONTH(v.fecha) AS mes_venta
+FROM
+    venta v
+JOIN
+    detalle_venta dv ON v.id_venta = dv.id_venta
+JOIN
+    plato p ON dv.id_plato = p.id_plato;
+
+------------------Vistas-----------------
+
+CREATE OR REPLACE VIEW VistasVentasPorMomento AS
+SELECT
+    mc.id_mc,
+    mc.momento AS nombre_momento,
+    p.id_plato,
+    p.nombre AS nombre_plato,
+    SUM(dv.cantidad_platos) AS cantidad_vendida,
+    SUM(dv.subtotal) AS total_vendido,
+    MONTH(v.fecha) AS mes_venta,
+    YEAR(v.fecha) AS año_venta
+FROM
+    detalle_venta dv
+JOIN
+    plato p ON dv.id_plato = p.id_plato
+JOIN
+    momento_consumo mc ON p.id_mc = mc.id_mc
+JOIN
+    venta v ON dv.id_venta = v.id_venta
+GROUP BY
+    mc.id_mc,
+    mc.momento,
+    p.id_plato,
+    p.nombre,
+    MONTH(v.fecha),
+    YEAR(v.fecha)
+ORDER BY
+    mc.momento,
+    total_vendido DESC;
+
+
+
+
+------------------Pruebas-----------------
+
+
+INSERT INTO venta (id_venta, fecha, valor_total)
+VALUES (32, '2025-06-13',50000);
+INSERT INTO detalle_venta (id_venta, id_plato, cantidad_platos, precio_unitario, subtotal)
+VALUES (32, 1, 2, 25000, 50000);

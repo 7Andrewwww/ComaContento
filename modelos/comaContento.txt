@@ -1,0 +1,124 @@
+CREATE SCHEMA IF NOT EXISTS `colombianocomacontento` DEFAULT CHARACTER SET utf8;
+USE `colombianocomacontento`;
+
+-- Tabla ingrediente
+CREATE TABLE IF NOT EXISTS `ingrediente` (
+  `id_ing` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
+  `unidad_medida` VARCHAR(45) NULL,
+  PRIMARY KEY (`id_ing`)
+) ENGINE=InnoDB;
+
+-- Tabla categoria
+CREATE TABLE IF NOT EXISTS `categoria` (
+  `id_cat` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
+  PRIMARY KEY (`id_cat`)
+) ENGINE=InnoDB;
+
+-- Tabla momento_consumo
+CREATE TABLE IF NOT EXISTS `momento_consumo` (
+  `id_mc` INT NOT NULL,
+  `momento` VARCHAR(45) NULL,
+  PRIMARY KEY (`id_mc`)
+) ENGINE=InnoDB;
+
+-- Tabla region
+CREATE TABLE IF NOT EXISTS `region` (
+  `id_reg` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
+  PRIMARY KEY (`id_reg`)
+) ENGINE=InnoDB;
+
+-- Tabla encargado
+CREATE TABLE IF NOT EXISTS `encargado` (
+  `id_enc` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
+  PRIMARY KEY (`id_enc`)
+) ENGINE=InnoDB;
+
+-- Tabla nivel_complejidad
+CREATE TABLE IF NOT EXISTS `nivel_complejidad` (
+  `id_nivel` INT NOT NULL,
+  `nombre` VARCHAR(45) NOT NULL,
+  `descripcion` VARCHAR(255) NULL,
+  PRIMARY KEY (`id_nivel`)
+) ENGINE=InnoDB;
+
+-- Tabla plato 
+CREATE TABLE IF NOT EXISTS `plato` (
+  `id_plato` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
+  `descripcion` LONGTEXT NULL,
+  `precio_base` DECIMAL(10,2) NULL,
+  `id_nivel` INT NULL,
+  `foto` TEXT NULL,
+  `id_cat` INT NULL,
+  `id_mc` INT NULL,
+  `id_reg` INT NULL,
+  `id_enc` INT NULL,
+  PRIMARY KEY (`id_plato`),
+  CONSTRAINT `fk_plato_categoria` FOREIGN KEY (`id_cat`) REFERENCES `categoria` (`id_cat`),
+  CONSTRAINT `fk_plato_momento` FOREIGN KEY (`id_mc`) REFERENCES `momento_consumo` (`id_mc`),
+  CONSTRAINT `fk_plato_region` FOREIGN KEY (`id_reg`) REFERENCES `region` (`id_reg`),
+  CONSTRAINT `fk_plato_encargado` FOREIGN KEY (`id_enc`) REFERENCES `encargado` (`id_enc`),
+  CONSTRAINT `fk_plato_nivel_complejidad` FOREIGN KEY (`id_nivel`) REFERENCES `nivel_complejidad` (`id_nivel`)
+) ENGINE=InnoDB;
+
+-- Tabla plato_ingrediente
+CREATE TABLE IF NOT EXISTS `plato_ingrediente` (
+  `cantidad` DECIMAL(10,2) NULL,
+  `id_plato` INT NOT NULL,
+  `id_ing` INT NOT NULL,
+  PRIMARY KEY (`id_plato`, `id_ing`),
+  CONSTRAINT `fk_pi_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`),
+  CONSTRAINT `fk_pi_ingrediente` FOREIGN KEY (`id_ing`) REFERENCES `ingrediente` (`id_ing`)
+) ENGINE=InnoDB;
+
+-- Tabla venta
+CREATE TABLE IF NOT EXISTS `venta` (
+  `id_venta` INT NOT NULL,
+  `fecha` DATE NULL,
+  `valor_total` DECIMAL(10,2) NULL,
+  PRIMARY KEY (`id_venta`)
+) ENGINE=InnoDB;
+
+-- Tabla detalle_venta
+CREATE TABLE IF NOT EXISTS `detalle_venta` (
+  `cantidad_platos` INT NULL,
+  `precio_unitario` DECIMAL(10,2) NULL,
+  `subtotal` DECIMAL(10,2) NULL,
+  `id_venta` INT NOT NULL,
+  `id_plato` INT NOT NULL,
+  PRIMARY KEY (`id_venta`, `id_plato`),
+  CONSTRAINT `fk_dv_venta` FOREIGN KEY (`id_venta`) REFERENCES `venta` (`id_venta`),
+  CONSTRAINT `fk_dv_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`)
+) ENGINE=InnoDB;
+
+-- Tabla carta (MODIFICADA - eliminada la referencia directa a plato)
+CREATE TABLE IF NOT EXISTS `carta` (
+  `id_carta` INT NOT NULL,
+  `fecha_inicio` DATE NULL,
+  `fecha_fin` DATE NULL,
+  `es_vigente` TINYINT(1) NULL,
+  `descripcion` LONGTEXT NULL,
+  PRIMARY KEY (`id_carta`)
+) ENGINE=InnoDB;
+
+-- Tabla carta_plato (NUEVA - relación muchos-a-muchos)
+CREATE TABLE IF NOT EXISTS `carta_plato` (
+  `id_carta` INT NOT NULL,
+  `id_plato` INT NOT NULL,
+  `orden` INT NULL COMMENT 'Orden de aparición en la carta',
+  PRIMARY KEY (`id_carta`, `id_plato`),
+  CONSTRAINT `fk_cartaplato_carta` FOREIGN KEY (`id_carta`) REFERENCES `carta` (`id_carta`),
+  CONSTRAINT `fk_cartaplato_plato` FOREIGN KEY (`id_plato`) REFERENCES `plato` (`id_plato`)
+) ENGINE=InnoDB;
+
+-- Insertar niveles de complejidad
+INSERT INTO `nivel_complejidad` (`id_nivel`, `nombre`, `descripcion`) VALUES
+(1, 'Fácil', 'Platos simples con pocos ingredientes y técnicas básicas'),
+(2, 'Sencillo', 'Preparaciones con pasos simples pero que requieren atención'),
+(3, 'Intermedio', 'Platos que requieren múltiples pasos y técnicas'),
+(4, 'Difícil', 'Preparaciones complejas con técnicas avanzadas'),
+(5, 'Gourmet', 'Alta cocina con técnicas profesionales e ingredientes especiales');
